@@ -1,7 +1,19 @@
-// import { createDecipheriv, createCipheriv } from 'crypto'
-import { createDecipheriv } from 'crypto'
+import { randomBytes, createDecipheriv, createCipheriv } from 'crypto'
 
-const pcks7_decode = (buf: Buffer) => {
+const randomStringLength16 = () => {
+  return randomBytes(8).toString('hex')
+}
+
+const pcks7Encode = (buf: Buffer) => {
+  const padLen = 32 - buf.length % 32 || 32
+  const padBuf = Buffer
+    .alloc(buf.length + padLen)
+    .fill(padLen)
+  buf.copy(padBuf)
+  return padBuf
+}
+
+const pcks7Decode = (buf: Buffer) => {
   let padLen = buf[buf.length - 1]
   if (padLen < 1 || padLen > 32) {
     padLen = 0
@@ -9,12 +21,31 @@ const pcks7_decode = (buf: Buffer) => {
   return buf.slice(0, buf.length - padLen)
 }
 
+// Todo add validate msgSignature
+
+export const encode = (text: string, encodingAESKey: string) => {
+  const AESKey = Buffer.from(encodingAESKey + '=', 'base64')
+  const IV = AESKey.slice(0, 16)
+  const cipher = createCipheriv('aes-256-cbc', AESKey, IV)
+  cipher.setAutoPadding(false)
+  const textBuffer = Buffer.from(text)
+  const data = Buffer.concat([
+    Buffer.from(randomStringLength16()),
+    Buffer.from(textBuffer.length.toString(16).padStart(8, '0'), 'hex'),
+    textBuffer
+  ])
+  return Buffer.concat([
+    cipher.update(pcks7Encode(data)),
+    cipher.final()
+  ]).toString('base64')
+}
+
 export const decode = (text: string, encodingAESKey: string) => {
   const AESKey = Buffer.from(encodingAESKey + '=', 'base64')
   const IV = AESKey.slice(0, 16)
   const decipher = createDecipheriv('aes-256-cbc', AESKey, IV)
   decipher.setAutoPadding(false)
-  const decipheredBuff = pcks7_decode(
+  const decipheredBuff = pcks7Decode(
     Buffer.concat([
       decipher.update(text, 'base64'),
       decipher.final()

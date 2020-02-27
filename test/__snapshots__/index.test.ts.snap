@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`weixin aes decode 1`] = `
+"{
+\\"ToUserName\\": \\"gh_0052f3068328\\",
+\\"FromUserName\\": \\"o55Go5f1BTRmw_MQMOnNDXnj6jiY\\",
+\\"CreateTime\\": 1582701510,
+\\"MsgType\\": \\"text\\",
+\\"Content\\": \\"1\\",
+\\"MsgId\\": 22658835000760200
+}
+"
+`;
